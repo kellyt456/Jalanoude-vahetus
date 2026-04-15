@@ -29,16 +29,31 @@
 
     .weather {
       font-size: 24px;
-      margin-bottom: 30px;
+      margin-bottom: 20px;
       opacity: 0.8;
     }
 
     .message {
-      font-size: 38px;
+      font-size: 34px;
       background: rgba(255,255,255,0.1);
       padding: 30px;
       border-radius: 20px;
       line-height: 1.4;
+      margin-bottom: 20px;
+    }
+
+    button {
+      padding: 15px 30px;
+      font-size: 18px;
+      border: none;
+      border-radius: 12px;
+      background: #38bdf8;
+      color: black;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #0ea5e9;
     }
   </style>
 </head>
@@ -49,9 +64,13 @@
   <h1>Üks Tallinna Kool</h1>
   <div class="weather" id="weather">Laen ilma...</div>
   <div class="message" id="msg">AI mõtleb...</div>
+  <button onclick="refreshMessage()">🔁 Uus sõnum</button>
 </div>
 
 <script>
+let currentTemp = 0;
+let currentRain = 0;
+
 async function load() {
   const res = await fetch(
     "https://api.open-meteo.com/v1/forecast?latitude=59.437&longitude=24.7536&current=temperature_2m,precipitation"
@@ -59,13 +78,13 @@ async function load() {
 
   const data = await res.json();
 
-  let temp = data.current.temperature_2m;
-  let rain = data.current.precipitation;
+  currentTemp = data.current.temperature_2m;
+  currentRain = data.current.precipitation;
 
   document.getElementById("weather").innerText =
-    `Tallinn: ${temp}°C | sademed: ${rain}`;
+    `Tallinn: ${currentTemp}°C | sademed: ${currentRain}`;
 
-  document.getElementById("msg").innerText = generateMsg(temp, rain);
+  refreshMessage();
 }
 
 function generateMsg(temp, rain) {
@@ -73,40 +92,57 @@ function generateMsg(temp, rain) {
 
   if (rain > 0) {
     messages = [
-      "Väljas on märg – tood pori klassi 🤢 Vaheta jalanõud!",
-      "Su tossud korjasid just tänava üles 😬 Jäta see ukse taha!",
-      "Märg ilm = bakterite pidu 🦠 Ära kutsu neid klassi!",
-      "Pori ei kuulu matemaatikatundi 😄 Vaheta jalanõud!",
+      "Vihm + tossud = pori klassis 🤢 Vaheta jalanõud!",
+      "Su jalanõud korjasid just Tallinna tänavad üles 😬",
+      "Pori ei kuulu matemaatikasse 📚",
+      "Märg ilm = bakterite pidu 🦠",
+      "Kui sa ei vaheta, tood klassi tasuta mustuse DLC 🎮",
+      "Su tossud on nüüd mud monster 👟🤢",
+      "Ära tee klassist mudalahingu ala 😄",
+      "Väljas vihm, sees puhtus – lihtne reegel",
+      "Bakterid armastavad niiskust 🦠",
+      "Su jalanõud ei pea klassis seiklema 😄"
     ];
   } else if (temp < 0) {
     messages = [
-      "Külm + märg = ideaalne jalaseenele 😬 Vaheta jalanõud!",
-      "Lumevesi klassis = bakterite spa 🦠",
-      "Talv on õues, mitte klassis ❄️ Vaheta jalanõud!",
-    ];
-  } else if (temp < 10) {
-    messages = [
-      "Niisked jalanõud + soe klass = bakterite unistus 🦠",
-      "Su tossud ei vaja klassis lisa seiklusi 😄",
-      "Natuke niiskust + soe ruum = halb combo 🤢",
+      "Külm + märg = jalaseene dream combo 😬",
+      "Talv väljas, mitte klassis ❄️",
+      "Lumevesi = bakterite spa 🦠",
+      "Su tossud sulavad klassis ära 🤢",
+      "Ära too lund klassi 😄",
+      "Jalanõude vahetus = brain move 🧠",
+      "Külm + niiskus = halb combo",
+      "Su jalad väärivad paremat 😄",
+      "See ei ole jääkoobas 🧊",
+      "Vaheta jalanõud või suffer consequences 😬"
     ];
   } else {
     messages = [
-      "Isegi kuiva ilmaga tood mustust 😄 Vaheta jalanõud!",
-      "Puhtad jalanõud = parem koolipäev",
       "Ära too tänavat klassi 👟",
+      "Basic hygiene = vaheta jalanõud 😄",
+      "Puhtad jalanõud = parem vibe ✨",
+      "Su tossud ei vaja klassis side quest’i 🎮",
+      "Ole normaalne – vaheta jalanõud 😄",
+      "Klass ≠ tänav",
+      "Väike samm, suur puhtus",
+      "Ära jaga mustust sõpradega 🤢",
+      "Su jalanõud ei pea igale poole tulema",
+      "Puhas klass = parem elu 😄"
     ];
   }
 
-  // iga 10 min uus sõnum
-  let time = Math.floor(Date.now() / 600000);
-  return messages[time % messages.length];
+  return messages[Math.floor(Math.random() * messages.length)];
+}
+
+function refreshMessage() {
+  const msg = generateMsg(currentTemp, currentRain);
+  document.getElementById("msg").innerText = msg;
 }
 
 // käivita
 load();
 
-// uuenda iga 10 min
+// automaatne vahetus iga 10 min
 setInterval(load, 600000);
 </script>
 
