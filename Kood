@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+  <meta charset="UTF-8">
+  <title>Üks Tallinna Kool</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial;
+      background: #0f172a;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .box {
+      text-align: center;
+      max-width: 800px;
+    }
+    h1 { font-size: 50px; }
+    .weather { font-size: 25px; margin: 20px; }
+    .msg {
+      font-size: 35px;
+      background: #1e293b;
+      padding: 30px;
+      border-radius: 20px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="box">
+  <h1>Üks Tallinna Kool</h1>
+  <div class="weather" id="weather">Laen ilma...</div>
+  <div class="msg" id="msg">AI mõtleb...</div>
+</div>
+
+<script>
+async function load() {
+  const res = await fetch("https://api.open-meteo.com/v1/forecast?latitude=59.437&longitude=24.7536&current=temperature_2m,precipitation");
+  const data = await res.json();
+
+  let temp = data.current.temperature_2m;
+  let rain = data.current.precipitation;
+
+  document.getElementById("weather").innerText =
+    `Tallinn: ${temp}°C | sademed: ${rain}`;
+
+  document.getElementById("msg").innerText = generateMsg(temp, rain);
+}
+
+function generateMsg(temp, rain) {
+  if (rain > 0) {
+    return "Väljas on märg. Kui jalanõusid ei vaheta, tood pori + bakterid klassi 🤢";
+  }
+  if (temp < 0) {
+    return "Külm ja niiske = bakterite pidu. Vaheta jalanõud või riskid jalaseene DLC-ga 😬";
+  }
+  if (temp < 10) {
+    return "Niisked jalanõud + soe klass = ideaalne koht bakteritele 🦠";
+  }
+  return "Isegi kui kuiv, mustus tuleb kaasa. Vaheta jalanõud – see on basic hygiene 😄";
+}
+
+load();
+setInterval(load, 600000);
+</script>
+
+</body>
+</html>
