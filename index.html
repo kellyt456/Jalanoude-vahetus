@@ -1,150 +1,343 @@
 <!DOCTYPE html>
 <html lang="et">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Üks Tallinna Kool</title>
-
   <style>
+    :root {
+      --bg1: #0f172a;
+      --bg2: #1e293b;
+      --card: rgba(255, 255, 255, 0.08);
+      --card2: rgba(255, 255, 255, 0.12);
+      --text: #ffffff;
+      --muted: rgba(255,255,255,0.72);
+      --accent: #38bdf8;
+      --accent2: #22c55e;
+      --shadow: 0 20px 60px rgba(0,0,0,0.35);
+    }
+
+    * { box-sizing: border-box; }
+
     body {
       margin: 0;
+      min-height: 100vh;
       font-family: Arial, sans-serif;
-      background: linear-gradient(135deg, #0f172a, #1e293b);
-      color: white;
+      color: var(--text);
+      background: linear-gradient(135deg, var(--bg1), var(--bg2));
       display: flex;
-      justify-content: center;
       align-items: center;
-      height: 100vh;
+      justify-content: center;
+      padding: 24px;
     }
 
     .container {
-      text-align: center;
-      max-width: 900px;
-      padding: 40px;
+      width: min(980px, 100%);
+      background: var(--card);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      padding: 32px;
+      backdrop-filter: blur(10px);
+    }
+
+    .topbar {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      align-items: end;
+      justify-content: space-between;
+      margin-bottom: 24px;
     }
 
     h1 {
-      font-size: 48px;
-      margin-bottom: 20px;
+      margin: 0;
+      font-size: clamp(34px, 5vw, 58px);
+      line-height: 1.05;
     }
 
-    .weather {
-      font-size: 24px;
-      margin-bottom: 20px;
-      opacity: 0.8;
+    .subtitle {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 18px;
     }
 
-    .message {
-      font-size: 34px;
-      background: rgba(255,255,255,0.1);
-      padding: 30px;
-      border-radius: 20px;
-      line-height: 1.4;
-      margin-bottom: 20px;
+    .controls {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    select, button {
+      border: 0;
+      border-radius: 14px;
+      padding: 14px 16px;
+      font-size: 16px;
+      outline: none;
+    }
+
+    select {
+      min-width: 280px;
+      background: rgba(255,255,255,0.92);
+      color: #0f172a;
     }
 
     button {
-      padding: 15px 30px;
-      font-size: 18px;
-      border: none;
-      border-radius: 12px;
-      background: #38bdf8;
-      color: black;
       cursor: pointer;
+      background: var(--accent);
+      color: #00111a;
+      font-weight: 700;
+      transition: transform 0.12s ease, opacity 0.12s ease;
     }
 
-    button:hover {
-      background: #0ea5e9;
+    button:hover { transform: translateY(-1px); }
+    button:active { transform: translateY(1px); opacity: 0.92; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 18px;
+    }
+
+    .card {
+      background: var(--card2);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 22px;
+      padding: 22px;
+    }
+
+    .weather {
+      display: grid;
+      gap: 14px;
+    }
+
+    .big {
+      font-size: clamp(28px, 4vw, 48px);
+      font-weight: 800;
+      line-height: 1.15;
+    }
+
+    .meta {
+      color: var(--muted);
+      font-size: 16px;
+    }
+
+    .message {
+      min-height: 190px;
+      display: flex;
+      align-items: center;
+      font-size: clamp(24px, 3.4vw, 38px);
+      font-weight: 700;
+      line-height: 1.25;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      width: fit-content;
+      background: rgba(34,197,94,0.16);
+      color: #bbf7d0;
+      border: 1px solid rgba(34,197,94,0.25);
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .footer {
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    @media (max-width: 820px) {
+      .grid { grid-template-columns: 1fr; }
+      select { min-width: 100%; }
+      .controls { width: 100%; }
+      button { width: 100%; }
     }
   </style>
 </head>
-
 <body>
+  <div class="container">
+    <div class="topbar">
+      <div>
+        <h1>Üks Tallinna Kool</h1>
+        <div class="subtitle">Vali kool, vaata ilma ja saa iga kord uus õpetlik-naljakas sõnum.</div>
+      </div>
 
-<div class="container">
-  <h1>Üks Tallinna Kool</h1>
-  <div class="weather" id="weather">Laen ilma...</div>
-  <div class="message" id="msg">AI mõtleb...</div>
-  <button onclick="refreshMessage()">🔁 Uus sõnum</button>
-</div>
+      <div class="controls">
+        <select id="schoolSelect">
+          <option value="UksTallinnaKool">Üks Tallinna Kool</option>
+          <option value="TallinnCity">Tallinn (näidis)</option>
+          <option value="Rocca">Rocca (näidis)</option>
+          <option value="Mustamae">Mustamäe (näidis)</option>
+        </select>
+        <button id="refreshBtn">🔁 Uus sõnum</button>
+      </div>
+    </div>
 
-<script>
-let currentTemp = 0;
-let currentRain = 0;
+    <div class="grid">
+      <div class="card weather">
+        <div class="badge" id="schoolName">📍 Üks Tallinna Kool</div>
+        <div class="big" id="weatherLine">Laen ilma...</div>
+        <div class="meta" id="weatherMeta">Palun oota...</div>
+      </div>
 
-async function load() {
-  const res = await fetch(
-    "https://api.open-meteo.com/v1/forecast?latitude=59.437&longitude=24.7536&current=temperature_2m,precipitation"
-  );
+      <div class="card message" id="msg">
+        AI mõtleb...
+      </div>
+    </div>
 
-  const data = await res.json();
+    <div class="footer">
+      Uuendus iga 10 minuti järel ja nupuga kohe käsitsi.
+    </div>
+  </div>
 
-  currentTemp = data.current.temperature_2m;
-  currentRain = data.current.precipitation;
+  <script>
+    const GOOGLE_DEMO_KEY = "YOUR_DEMO_KEY";
 
-  document.getElementById("weather").innerText =
-    `Tallinn: ${currentTemp}°C | sademed: ${currentRain}`;
+    // Siia saad hiljem lisada uusi koole ja nende koordinaate.
+    const schoolLocations = {
+      UksTallinnaKool: {
+        name: "Üks Tallinna Kool",
+        lat: 59.4370,
+        lon: 24.7536
+      },
+      TallinnCity: {
+        name: "Tallinn (näidis)",
+        lat: 59.4370,
+        lon: 24.7536
+      },
+      Rocca: {
+        name: "Rocca (näidis)",
+        lat: 59.4370,
+        lon: 24.6600
+      },
+      Mustamae: {
+        name: "Mustamäe (näidis)",
+        lat: 59.3960,
+        lon: 24.6740
+      }
+    };
 
-  refreshMessage();
-}
+    const weatherLine = document.getElementById("weatherLine");
+    const weatherMeta = document.getElementById("weatherMeta");
+    const msg = document.getElementById("msg");
+    const schoolName = document.getElementById("schoolName");
+    const schoolSelect = document.getElementById("schoolSelect");
+    const refreshBtn = document.getElementById("refreshBtn");
 
-function generateMsg(temp, rain) {
-  let messages = [];
+    let latestWeather = null;
+    let latestSchool = schoolLocations[schoolSelect.value];
 
-  if (rain > 0) {
-    messages = [
-      "Vihm + tossud = pori klassis 🤢 Vaheta jalanõud!",
-      "Su jalanõud korjasid just Tallinna tänavad üles 😬",
-      "Pori ei kuulu matemaatikasse 📚",
-      "Märg ilm = bakterite pidu 🦠",
-      "Kui sa ei vaheta, tood klassi tasuta mustuse DLC 🎮",
-      "Su tossud on nüüd mud monster 👟🤢",
-      "Ära tee klassist mudalahingu ala 😄",
-      "Väljas vihm, sees puhtus – lihtne reegel",
-      "Bakterid armastavad niiskust 🦠",
-      "Su jalanõud ei pea klassis seiklema 😄"
-    ];
-  } else if (temp < 0) {
-    messages = [
-      "Külm + märg = jalaseene dream combo 😬",
-      "Talv väljas, mitte klassis ❄️",
-      "Lumevesi = bakterite spa 🦠",
-      "Su tossud sulavad klassis ära 🤢",
-      "Ära too lund klassi 😄",
-      "Jalanõude vahetus = brain move 🧠",
-      "Külm + niiskus = halb combo",
-      "Su jalad väärivad paremat 😄",
-      "See ei ole jääkoobas 🧊",
-      "Vaheta jalanõud või suffer consequences 😬"
-    ];
-  } else {
-    messages = [
-      "Ära too tänavat klassi 👟",
-      "Basic hygiene = vaheta jalanõud 😄",
-      "Puhtad jalanõud = parem vibe ✨",
-      "Su tossud ei vaja klassis side quest’i 🎮",
-      "Ole normaalne – vaheta jalanõud 😄",
-      "Klass ≠ tänav",
-      "Väike samm, suur puhtus",
-      "Ära jaga mustust sõpradega 🤢",
-      "Su jalanõud ei pea igale poole tulema",
-      "Puhas klass = parem elu 😄"
-    ];
-  }
+    function pick(arr) {
+      return arr[Math.floor(Math.random() * arr.length)];
+    }
 
-  return messages[Math.floor(Math.random() * messages.length)];
-}
+    function generateMsg(weather) {
+      const temp = weather?.temperature?.degrees ?? 0;
+      const rain = weather?.precipitation?.qpf?.quantity ?? 0;
+      const wind = weather?.wind?.speed?.value ?? 0;
+      const condition = (weather?.weatherCondition?.type || "").toUpperCase();
 
-function refreshMessage() {
-  const msg = generateMsg(currentTemp, currentRain);
-  document.getElementById("msg").innerText = msg;
-}
+      const rainy = rain > 0 || ["RAIN", "DRIZZLE", "SNOW", "SLEET", "THUNDERSTORM"].includes(condition);
+      const cold = temp <= 0;
+      const windy = wind >= 8;
 
-// käivita
-load();
+      const rainyMsgs = [
+        "Vihm tuli külla, aga pori jäägu ukse taha 🌧️👟",
+        "Märg ilm + märjad tossud = klassi jaoks ekstra pähkli-katastroof 🤢",
+        "Täna on õige päev vahetada jalanõud, mitte tuua tänavat sisse 🧼",
+        "Kui väljas on loik, siis klassis olgu puhas vibe ✨",
+        "Pori ei ole koolitarve. Jäta see ukse juurde 😄",
+        "Vihmaga tulevad tänavalt kaasa ka bakterid — ära anna neile klassis tasuta piletit 🦠",
+        "Märjad jalanõud tahavad puhkust. Klass ei ole porispaa 😎",
+        "Täna on test: kas su jalanõud jäävad ukse taha? Õige vastus on jah.",
+        "Paks pori on väljas, mitte klassis. Tee targem valik 👟",
+        "Kui tossud on nagu mudakäpad, siis on aeg vahetada need ära 🤝"
+      ];
 
-// automaatne vahetus iga 10 min
-setInterval(load, 600000);
-</script>
+      const coldMsgs = [
+        "Külm ilm on väljas, mitte klassi põrandal ❄️",
+        "Lumi ja lörts on lahedad ainult siis, kui nad kooli sisse ei tule 😬",
+        "Talv on õues, klassis on vaja puhtaid jalgu ja head vibe’i ✨",
+        "Soojas ruumis tahavad jalad puhata, mitte jääda märjaks 🧦",
+        "Külm + niiskus = see combo, mida keegi ei küsinud 🥶",
+        "Vaheta jalanõud ja hoia klassis puhas energia, mitte lumevesi ❄️",
+        "Tänavamustus ei pea olema osa sinu koolipäevast 😄",
+        "Kui väljas on miinused, siis klassis olgu plussid — eriti puhtuses 🧼",
+        "Jäätunud loikude aeg on väljas, mitte vahetunnis",
+        "Koolipäev algab paremini puhaste kingadega, mitte lumekotiga 👟"
+      ];
 
+      const windyOrNeutralMsgs = [
+        "Ära too tänavat klassi — lihtne, aga legendaarne reegel 👟",
+        "Puhtad jalanõud = vähem mustust = parem koolivibe ✨",
+        "Sinu tossud ei pea klassis side quest’i tegema 🎮",
+        "Vahetad jalanõud = oled juba pool võitu ees 🧠",
+        "Klass ei ole tänav, ja põrand ei ole poriväli 😄",
+        "Väike harjumus, suur vahe. Jalad tänavalt klassi ainult õigete jalanõudega.",
+        "Puhas põrand on tiimitöö — alusta enda jalanõudest 🤝",
+        "Kui ilm on okei, siis tee vähemalt üks tark otsus: vaheta jalanõud 😎",
+        "Mõtle nii: vähem mustust, rohkem austust klassi vastu 📚",
+        "Tänavamuster jääb õue. Klassis on puhas mäng ✨"
+      ];
+
+      let messages = windyOrNeutralMsgs;
+      if (rainy) messages = rainyMsgs;
+      else if (cold) messages = coldMsgs;
+      else if (windy) messages = windyOrNeutralMsgs;
+
+      return pick(messages);
+    }
+
+    async function loadWeather() {
+      const school = schoolLocations[schoolSelect.value] || schoolLocations.UksTallinnaKool;
+      latestSchool = school;
+      schoolName.textContent = `📍 ${school.name}`;
+      weatherMeta.textContent = "Laen Google Weather API-st...";
+
+      const url =
+        `https://weather.googleapis.com/v1/currentConditions:lookup` +
+        `?key=${encodeURIComponent(GOOGLE_DEMO_KEY)}` +
+        `&location.latitude=${encodeURIComponent(school.lat)}` +
+        `&location.longitude=${encodeURIComponent(school.lon)}`;
+
+      try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+
+        latestWeather = data;
+
+        const temp = data?.temperature?.degrees ?? "—";
+        const feels = data?.feelsLikeTemperature?.degrees ?? "—";
+        const wind = data?.wind?.speed?.value ?? "—";
+        const desc = data?.weatherCondition?.description?.text ?? "Tundmatu";
+
+        weatherLine.textContent = `${temp} °C • ${desc}`;
+        weatherMeta.textContent = `Tundub nagu ${feels} °C • tuul ${wind} • asukoht: ${school.name}`;
+        msg.textContent = generateMsg(data);
+      } catch (err) {
+        weatherLine.textContent = "Ilma ei õnnestunud laadida";
+        weatherMeta.textContent = "Kontrolli demo key'd ja internetiühendust.";
+        msg.textContent = "Täna on hea päev jätta tänavamustus ukse taha 😄";
+        console.error(err);
+      }
+    }
+
+    function refreshMessageOnly() {
+      msg.textContent = generateMsg(latestWeather);
+    }
+
+    refreshBtn.addEventListener("click", refreshMessageOnly);
+    schoolSelect.addEventListener("change", loadWeather);
+
+    loadWeather();
+    setInterval(loadWeather, 10 * 60 * 1000);
+  </script>
 </body>
 </html>
