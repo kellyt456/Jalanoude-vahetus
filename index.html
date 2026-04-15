@@ -2,6 +2,7 @@
 <html lang="et">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Üks Tallinna Kool</title>
 
   <style>
@@ -13,7 +14,7 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 100vh;
+      min-height: 100vh;
     }
 
     .container {
@@ -24,6 +25,7 @@
 
     h1 {
       font-size: 48px;
+      margin-bottom: 10px;
     }
 
     .date {
@@ -34,7 +36,7 @@
 
     .weather {
       font-size: 24px;
-      margin: 20px;
+      margin: 20px 0;
     }
 
     .message {
@@ -59,86 +61,144 @@
     button:hover {
       background: #0ea5e9;
     }
+
+    .small {
+      margin-top: 12px;
+      font-size: 14px;
+      opacity: 0.7;
+    }
   </style>
 </head>
 
 <body>
+  <div class="container">
+    <h1>Üks Tallinna Kool</h1>
+    <div class="date" id="date"></div>
+    <div class="weather" id="weather">Laen ilma...</div>
+    <div class="message" id="msg">AI mõtleb...</div>
+    <button onclick="refreshMessage()">🔁 Uus sõnum</button>
+    <div class="small" id="info"></div>
+  </div>
 
-<div class="container">
-  <h1>Üks Tallinna Kool</h1>
-  <div class="date" id="date"></div>
-  <div class="weather" id="weather">Laen ilma...</div>
-  <div class="message" id="msg">AI mõtleb...</div>
-  <button onclick="refreshMessage()">🔁 Uus sõnum</button>
-</div>
+  <script>
+    let currentTemp = 0;
+    let currentRain = 0;
+    let currentWeatherCode = 0;
+    let isRainy = false;
+    let currentPlace = "sinu asukohas";
 
-<script>
-let currentTemp = 0;
-let currentRain = 0;
+    const rainMessages = [
+      "Kui põrand kleepub, siis keegi EI vahetanud jalanõusid. Ära ole see inimene.",
+      "Tänava pori ei ole esteetika. Jäta see õue, mitte klassi põrandale.",
+      "Märjad tossud klassis = tasuta lõhnashow kõigile. Keegi ei tahtnud seda.",
+      "Libe põrand ei ole parkour’i kutse. Vaheta jalanõud.",
+      "Jalanõude vahetus: väiksem effort kui see, et kõik aknad lahti tehakse sinu pärast.",
+      "Ära too välismaailma baktereid klassi – neil pole tunniplaani.",
+      "Klass ei ole koht, kus testida, kui kaua jalaseen “meta” on."
+    ];
 
-const messages = [
-"Vaheta jalanõud – su drip ei päästa, kui lõhn juba ette jõuab 😬👟",
-"Klass ei ole koht, kus testida, kui kaua jalaseen “meta” on 🤢🦠",
-"Sisejalanõud jalga – muidu su saapad teevad ruumis keemiarünnaku ☣️😷",
-"Kui põrand kleepub, siis keegi EI vahetanud jalanõusid. Ära ole see inimene 😄",
-"Su jalad higistavad rohkem kui sina kontrolltöös – lase neil hingata 🥵🧦",
-"Tänava pori ei ole esteetika. Jäta see õue, mitte klassi põrandale 🌧️👟",
-"Jalanõude vahetamine = null vaeva, aga 100% vähem haisu 💨",
-"Kui su jalanõud hakkavad omaette eluvorme kasvatama, on aeg midagi muuta 🦠😬",
-"Märjad tossud klassis = tasuta lõhnashow kõigile. Keegi ei tahtnud seda 🤢🎭",
-"Sisejalanõud hoiavad su jalad (ja maine) värskena 😎✨",
-"Ära too välismaailma baktereid klassi – neil pole tunniplaani 🦠📚",
-"Libe põrand ei ole parkour’i kutse. Vaheta jalanõud 🧊😄",
-"Su jalanõud võivad olla bränd, aga hais on universaalne 😬🌍",
-"Jalanõude vahetus: väiksem effort kui see, et kõik aknad lahti tehakse sinu pärast 💨😂",
-"Respect teiste vastu algab lihtsast asjast – pane sisejalanõud jalga 🤝👟"
-];
+    const dryMessages = [
+      "Vaheta jalanõud – su drip ei päästa, kui lõhn juba ette jõuab.",
+      "Sisejalanõud jalga – muidu su saapad teevad ruumis keemiarünnaku.",
+      "Su jalad higistavad rohkem kui sina kontrolltöös – lase neil hingata.",
+      "Jalanõude vahetamine = null vaeva, aga 100% vähem haisu.",
+      "Kui su jalanõud hakkavad omaette eluvorme kasvatama, on aeg midagi muuta.",
+      "Sisejalanõud hoiavad su jalad (ja maine) värskena.",
+      "Su jalanõud võivad olla bränd, aga hais on universaalne.",
+      "Respect teiste vastu algab lihtsast asjast – pane sisejalanõud jalga."
+    ];
 
-function formatDate() {
-  const d = new Date();
-  return d.toLocaleDateString("et-EE", {
-    weekday: "long",
-    day: "numeric",
-    month: "long"
-  });
-}
+    function formatDate() {
+      const d = new Date();
+      return d.toLocaleDateString("et-EE", {
+        weekday: "long",
+        day: "numeric",
+        month: "long"
+      });
+    }
 
-async function load() {
-  document.getElementById("date").innerText = formatDate();
+    function isRainyWeatherCode(code) {
+      // Open-Meteo weather code loogika:
+      // 51–67 = vihm / jäide / jäätuv vihm
+      // 80–82 = hoovihm
+      // 95–99 = äike / tugev sadu
+      return (
+        (code >= 51 && code <= 67) ||
+        (code >= 80 && code <= 82) ||
+        (code >= 95 && code <= 99)
+      );
+    }
 
-  const res = await fetch(
-    "https://api.open-meteo.com/v1/forecast?latitude=59.437&longitude=24.7536&current=temperature_2m,precipitation"
-  );
+    function getGeolocation() {
+      return new Promise((resolve, reject) => {
+        if (!navigator.geolocation) {
+          reject(new Error("Geolocation pole toetatud"));
+          return;
+        }
 
-  const data = await res.json();
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            resolve({
+              lat: pos.coords.latitude,
+              lon: pos.coords.longitude
+            });
+          },
+          (err) => reject(err),
+          {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 600000
+          }
+        );
+      });
+    }
 
-  currentTemp = data.current.temperature_2m;
-  currentRain = data.current.precipitation;
+    async function loadWeatherForLocation(lat, lon) {
+      const res = await fetch(
+        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,precipitation,weather_code&timezone=auto`
+      );
 
-  document.getElementById("weather").innerText =
-    `Tallinn: ${currentTemp}°C | sademed: ${currentRain}`;
+      const data = await res.json();
 
-  refreshMessage();
-}
+      currentTemp = data.current.temperature_2m;
+      currentRain = data.current.precipitation ?? 0;
+      currentWeatherCode = data.current.weather_code ?? 0;
 
-function refreshMessage() {
-  let base = messages[Math.floor(Math.random() * messages.length)];
+      isRainy = currentRain > 0.1 || isRainyWeatherCode(currentWeatherCode);
 
-  if (currentRain > 0) {
-    base += " 🌧️ (Täna eriti oluline!)";
-  } else if (currentTemp < 0) {
-    base += " ❄️ (Külm + niiske = double trouble)";
-  }
+      document.getElementById("weather").innerText =
+        `${currentPlace}: ${currentTemp}°C | ${isRainy ? "vihmane" : "kuiv"}`;
 
-  document.getElementById("msg").innerText = base;
-}
+      document.getElementById("info").innerText =
+        `Tuvastatud ilmakaart: ${currentWeatherCode} | sademed: ${currentRain}`;
 
-// start
-load();
+      refreshMessage();
+    }
 
-// uuenda iga 10 min
-setInterval(load, 600000);
-</script>
+    async function load() {
+      document.getElementById("date").innerText = formatDate();
 
+      try {
+        const coords = await getGeolocation();
+        currentPlace = "Sinu asukohas";
+        await loadWeatherForLocation(coords.lat, coords.lon);
+      } catch (e) {
+        currentPlace = "Tallinnas";
+        await loadWeatherForLocation(59.437, 24.7536);
+        document.getElementById("info").innerText =
+          "Asukoha luba puudus, kasutan Tallinna ilma.";
+      }
+    }
+
+    function refreshMessage() {
+      const source = isRainy ? rainMessages : dryMessages;
+      const base = source[Math.floor(Math.random() * source.length)];
+
+      document.getElementById("msg").innerText = base;
+    }
+
+    load();
+    setInterval(load, 600000);
+  </script>
 </body>
 </html>
